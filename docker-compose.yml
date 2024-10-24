@@ -1,0 +1,179 @@
+version: '3.8'
+
+services:
+ 
+  postgres-users:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: chirper_users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_users_data:/var/lib/postgresql/data
+      - ./backend/user_profile/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5440:5432" 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  postgres-tweets:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: chirper_tweets
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_tweets_data:/var/lib/postgresql/data
+    ports:
+      - "5441:5432" 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  postgres-notifications:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: chirper_notifications
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_notifications_data:/var/lib/postgresql/data
+    ports:
+      - "5442:5432" 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  postgres-search:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: chirper_search
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_search_data:/var/lib/postgresql/data
+    ports:
+      - "5443:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  
+  user-service:
+    build:
+      context: ./backend/user_profile
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres-users:5432/chirper_users
+      - JWT_SECRET_KEY=sECSry0roJDIwrxIfArZCNZ9Nl4pg6hik7SlCMmF140=
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+    volumes:
+      - ./backend/user_profile:/app
+    networks:
+      - app-network
+
+  tweet-service:
+    build:
+      context: ./backend/tweet_service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres-tweets:5432/chirper_tweets
+      - JWT_SECRET_KEY=sECSry0roJDIwrxIfArZCNZ9Nl4pg6hik7SlCMmF140=
+      - FLASK_ENV=development
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres-tweets:
+        condition: service_healthy
+    volumes:
+      - ./backend/tweet_service:/app
+    networks:
+      - app-network
+
+  notification-service:
+    build:
+      context: ./backend/notification_service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres-notifications:5432/chirper_notifications
+      - JWT_SECRET_KEY=sECSry0roJDIwrxIfArZCNZ9Nl4pg6hik7SlCMmF140=
+      - FLASK_ENV=development
+    ports:
+      - "5002:5002"
+    depends_on:
+      postgres-notifications:
+        condition: service_healthy
+    volumes:
+      - ./backend/notification_service:/app
+    networks:
+      - app-network
+
+  search-service:
+    build:
+      context: ./backend/search_service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres-search:5432/chirper_search
+      - JWT_SECRET_KEY=sECSry0roJDIwrxIfArZCNZ9Nl4pg6hik7SlCMmF140=
+      - FLASK_ENV=development
+    ports:
+      - "5003:5003"
+    depends_on:
+      postgres-search:
+        condition: service_healthy
+    volumes:
+      - ./backend/search_service:/app
+    networks:
+      - app-network
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - user-service
+      - tweet-service
+      - notification-service
+      - search-service
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+
+volumes:
+  postgres_users_data:
+  postgres_tweets_data:
+  postgres_notifications_data:
+  postgres_search_data:
+
+networks:
+  app-network:
+    driver: bridge
