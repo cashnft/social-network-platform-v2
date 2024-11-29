@@ -1,56 +1,76 @@
-import React from 'react';
-import { tweetAPI } from '../api';
-import Tweet from '../components/Tweet';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { useInView } from 'react-intersection-observer';
+import React from "react";
+import { tweetAPI } from "../api";
+import Tweet from "../components/Tweet";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { useInView } from "react-intersection-observer";
 
 function HomePage() {
   const [tweets, setTweets] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState('');
+  const [error, setError] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
-  const [newTweet, setNewTweet] = React.useState('');
+  const [newTweet, setNewTweet] = React.useState("");
   const [isPosting, setIsPosting] = React.useState(false);
-  
- 
+  // const { user } = React.useContext(UserContext);
+  const user = {
+    id: 1,
+    username: "johndoe",
+    avatar: "https://i.pravatar.cc/150?u=johndoe",
+    name: "John Doe",
+  };
+
   const { ref, inView } = useInView({
     threshold: 0,
   });
 
-  
   React.useEffect(() => {
     loadTweets();
   }, []);
 
-
   React.useEffect(() => {
     if (inView && hasMore && !isLoading) {
-      setPage(prev => prev + 1);
+      setPage((prev) => prev + 1);
     }
   }, [inView, hasMore]);
-
 
   const loadTweets = async () => {
     try {
       setIsLoading(true);
       const response = await tweetAPI.getTimeline(page);
-      
+
+      const newTweets = response.tweets.map((t) => ({
+        author: user,
+        commentsCount: 0,
+        isAuthor: t.user_id === user.id,
+        ...t,
+      }));
+
+      /*tweet: PropTypes.shape({
+        author: PropTypes.shape({
+          username: PropTypes.string.isRequired,
+          name: PropTypes.string.isRequired,
+          avatar: PropTypes.string,
+        }).isRequired,
+        commentsCount: PropTypes.number.isRequired,
+        is_liked: PropTypes.bool.isRequired,
+        isAuthor: PropTypes.bool.isRequired,*/
+
+      console.log(newTweets);
       if (page === 1) {
-        setTweets(response.tweets);
+        setTweets(newTweets);
       } else {
-        setTweets(prev => [...prev, ...response.tweets]);
+        setTweets((prev) => [...prev, ...newTweets]);
       }
-      
-      setHasMore(response.tweets.length === 20); 
+
+      setHasMore(response.tweets.length === 20);
     } catch (err) {
-      setError('Failed to load tweets');
+      setError("Failed to load tweets");
     } finally {
       setIsLoading(false);
     }
   };
 
- 
   const handlePostTweet = async (e) => {
     e.preventDefault();
     if (!newTweet.trim()) return;
@@ -58,10 +78,16 @@ function HomePage() {
     try {
       setIsPosting(true);
       const tweet = await tweetAPI.createTweet(newTweet);
-      setTweets(prev => [tweet, ...prev]);
-      setNewTweet('');
+      const tweetNew = {
+        ...tweet,
+        author: user,
+        commentsCount: 0,
+        isAuthor: t.user_id === user.id,
+      };
+      setTweets((prev) => [tweetNew, ...prev]);
+      setNewTweet("");
     } catch (err) {
-      setError('Failed to post tweet');
+      setError("Failed to post tweet");
     } finally {
       setIsPosting(false);
     }
@@ -69,37 +95,38 @@ function HomePage() {
 
   // Handle like/unlike
   const handleLike = async (tweetId) => {
-    const tweet = tweets.find(t => t.id === tweetId);
+    const tweet = tweets.find((t) => t.id === tweetId);
     if (!tweet) return;
 
     try {
-      if (tweet.isLiked) {
+      if (tweet.is_liked) {
         await tweetAPI.unlikeTweet(tweetId);
       } else {
         await tweetAPI.likeTweet(tweetId);
       }
-      
-      setTweets(prev => prev.map(t => 
-        t.id === tweetId 
-          ? { 
-              ...t, 
-              isLiked: !t.isLiked, 
-              likesCount: t.likesCount + (t.isLiked ? -1 : 1) 
-            }
-          : t
-      ));
+
+      setTweets((prev) =>
+        prev.map((t) =>
+          t.id === tweetId
+            ? {
+                ...t,
+                is_liked: !t.is_liked,
+                likesCount: t.likesCount + (t.is_liked ? -1 : 1),
+              }
+            : t
+        )
+      );
     } catch (err) {
-      setError('Failed to update like');
+      setError("Failed to update like");
     }
   };
-
 
   const handleDelete = async (tweetId) => {
     try {
       await tweetAPI.deleteTweet(tweetId);
-      setTweets(prev => prev.filter(t => t.id !== tweetId));
+      setTweets((prev) => prev.filter((t) => t.id !== tweetId));
     } catch (err) {
-      setError('Failed to delete tweet');
+      setError("Failed to delete tweet");
     }
   };
 
@@ -112,7 +139,7 @@ function HomePage() {
             value={newTweet}
             onChange={(e) => setNewTweet(e.target.value)}
             placeholder="What's happening?"
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             rows="3"
             maxLength="280"
           />
@@ -125,28 +152,27 @@ function HomePage() {
               disabled={isPosting || !newTweet.trim()}
               className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50"
             >
-              {isPosting ? 'Posting...' : 'Tweet'}
+              {isPosting ? "Posting..." : "Tweet"}
             </button>
           </div>
         </form>
       </div>
 
       {/* Error message */}
+      {/* Error message */}
       {error && (
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          {error}
-          <button
-            onClick={() => setError('')}
-            className="absolute top-0 right-0 p-2"
-          >
-            ×
-          </button>
-        </div>
+        <ErrorState
+          message={error}
+          onRetry={() => {
+            setError("");
+            loadTweets();
+          }}
+        />
       )}
 
       {/* Tweets list */}
       <div className="space-y-4">
-        {tweets.map(tweet => (
+        {tweets.map((tweet) => (
           <Tweet
             key={tweet.id}
             tweet={tweet}
@@ -164,9 +190,7 @@ function HomePage() {
 
       {/* No more tweets message */}
       {!hasMore && !isLoading && (
-        <p className="text-center text-gray-500 py-4">
-          No more tweets to load
-        </p>
+        <p className="text-center text-gray-500 py-4">No more tweets to load</p>
       )}
     </div>
   );

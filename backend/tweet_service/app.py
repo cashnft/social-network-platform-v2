@@ -10,6 +10,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:password@localhost:5432/chirper_tweets')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', '')
+app.url_map.strict_slashes = False
 
 #init the extensions
 db = SQLAlchemy(app)
@@ -39,7 +40,7 @@ class Like(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'tweet_id', name='unique_user_like'),)
 
 #routes
-@app.route('/tweets', methods=['POST'])
+@app.route('/tweets/post', methods=['POST'])
 @jwt_required()
 def create_tweet():
     current_user_id = get_jwt_identity()
@@ -66,7 +67,8 @@ def create_tweet():
                 'content': tweet.content,
                 'user_id': tweet.user_id,
                 'created_at': tweet.created_at.isoformat(),
-                'likes_count': 0
+                'likes_count': len(tweet.likes),
+                'is_liked': any(like.user_id == current_user_id for like in tweet.likes)
             }
         }), 201
 
@@ -175,6 +177,9 @@ def unlike_tweet(tweet_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)

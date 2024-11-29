@@ -1,4 +1,7 @@
 /* Reset and Base Styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 :root {
     --primary-color: #1DA1F2;
     --primary-hover: #1a91da;

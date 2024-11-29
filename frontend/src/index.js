@@ -1,9 +1,10 @@
-import React from 'react';
+import './styles/index.css';
+import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './contexts/UserContext';
+import LoadingSpinner from './components/LoadingSpinner';
 import App from './App';
-import './styles/index.css';
 
 const container = document.getElementById('root');
 const root = createRoot(container);
@@ -11,9 +12,11 @@ const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <UserProvider>
-        <App />
-      </UserProvider>
+      <Suspense fallback={<LoadingSpinner />}>
+        <UserProvider>
+          <App />
+        </UserProvider>
+      </Suspense>
     </BrowserRouter>
   </React.StrictMode>
 );

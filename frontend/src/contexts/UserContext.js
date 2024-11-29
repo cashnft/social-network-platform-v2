@@ -1,5 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authAPI } from '../api';
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { authAPI } from "../api";
 
 export const UserContext = createContext(null);
 
@@ -12,21 +12,34 @@ export function UserProvider({ children }) {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('token');
+    console.log("Checking authentication...");
+    const token = localStorage.getItem("token");
+    console.log("Token exists:", token);
+
     if (token) {
       try {
+        console.log("Fetching user data...");
         const userData = await authAPI.getCurrentUser();
+        console.log("User data received:", userData);
         setUser(userData);
       } catch (error) {
-        localStorage.removeItem('token');
+        console.error("Auth check failed:", error);
+        localStorage.removeItem("token");
       }
     }
     setLoading(false);
   };
 
+  const register = async (userData) => {
+    const response = await authAPI.register(userData);
+    localStorage.setItem("token", response.token);
+    setUser(response.user);
+    return response;
+  };
+
   const login = async (credentials) => {
     const response = await authAPI.login(credentials);
-    localStorage.setItem('token', response.token);
+    localStorage.setItem("token", response.token);
     setUser(response.user);
     return response;
   };
@@ -35,27 +48,32 @@ export function UserProvider({ children }) {
     try {
       await authAPI.logout();
     } finally {
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
       setUser(null);
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   return (
-    <UserContext.Provider value={{ user, setUser, login, logout, loading }}>
+    <UserContext.Provider
+      value={{ user, setUser, login, logout, loading, register }}
+    >
       {children}
     </UserContext.Provider>
   );
 }
 
-
 export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
 }

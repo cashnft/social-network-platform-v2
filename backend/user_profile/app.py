@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:password@localhost:5432/chirper_users')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', '')  # Change in production
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
 #init the extensions
 db = SQLAlchemy(app)
@@ -64,7 +64,7 @@ followers = db.Table('followers',
     db.Column('created_at', db.DateTime, default=datetime.utcnow)
 )
 
-@app.route('/auth/register', methods=['POST'])
+@app.route('/users/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
 
@@ -90,7 +90,7 @@ def register():
         db.session.commit()
 
         #create access token
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'message': 'User created successfully',
@@ -102,7 +102,7 @@ def register():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/auth/login', methods=['POST'])
+@app.route('/users/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
 
@@ -114,7 +114,7 @@ def login():
     if not user or not user.check_password(data['password']):
         return jsonify({'error': 'Invalid email or password'}), 401
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))  # Convert to string here
     
     return jsonify({
         'message': 'Login successful',
@@ -126,6 +126,7 @@ def login():
 @jwt_required()
 def get_current_user():
     current_user_id = get_jwt_identity()
+    print(current_user_id)
     user = User.query.get(current_user_id)
     
     if not user:
@@ -204,4 +205,4 @@ def follow_user(username):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5004, debug=True)

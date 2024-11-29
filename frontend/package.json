@@ -3,10 +3,11 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-      "start": "webpack serve --mode development --open",
+      "start": "webpack serve --mode development --open  --hot",
       "build": "webpack --mode production",
       "test": "jest",
-      "lint": "eslint src/**/*.{js,jsx}"
+      "lint": "eslint src/**/*.{js,jsx}",
+      "debug": "webpack serve --mode development --devtool source-map"
     },
     "dependencies": {
       "react": "^18.2.0",

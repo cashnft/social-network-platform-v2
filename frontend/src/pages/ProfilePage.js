@@ -74,7 +74,7 @@ function ProfilePage() {
       const tweet = tweets.find(t => t.id === tweetId);
       if (!tweet) return;
 
-      if (tweet.isLiked) {
+      if (tweet.is_liked) {
         await tweetAPI.unlikeTweet(tweetId);
       } else {
         await tweetAPI.likeTweet(tweetId);
@@ -84,8 +84,8 @@ function ProfilePage() {
         t.id === tweetId
           ? {
               ...t,
-              isLiked: !t.isLiked,
-              likesCount: t.likesCount + (t.isLiked ? -1 : 1)
+              is_liked: !t.is_liked,
+              likesCount: t.likesCount + (t.is_liked ? -1 : 1)
             }
           : t
       ));

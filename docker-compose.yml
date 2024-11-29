@@ -75,7 +75,6 @@ services:
     networks:
       - app-network
 
-  
   user-service:
     build:
       context: ./backend/user_profile
@@ -85,7 +84,7 @@ services:
       - JWT_SECRET_KEY=sECSry0roJDIwrxIfArZCNZ9Nl4pg6hik7SlCMmF140=
       - FLASK_ENV=development
     ports:
-      - "5000:5000"
+      - "5004:5004"
     depends_on:
       postgres-users:
         condition: service_healthy
@@ -148,7 +147,6 @@ services:
     networks:
       - app-network
 
-
   frontend:
     build:
       context: ./frontend
@@ -156,7 +154,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_API_URL=http://localhost:5004
     depends_on:
       - user-service
       - tweet-service

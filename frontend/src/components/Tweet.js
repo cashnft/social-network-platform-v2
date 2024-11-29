@@ -47,7 +47,7 @@ function Tweet({ tweet, onLike, onDelete }) {
             <span className="text-gray-500">@{tweet.author.username}</span>
             <span className="text-gray-500">·</span>
             <time className="text-gray-500">
-              {formatDistanceToNow(new Date(tweet.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(tweet.created_at), { addSuffix: true })}
             </time>
           </div>
 
@@ -58,13 +58,13 @@ function Tweet({ tweet, onLike, onDelete }) {
           <div className="mt-3 flex items-center space-x-6">
             <button
               className={`flex items-center space-x-1 text-gray-500 hover:text-red-500 ${
-                tweet.isLiked ? 'text-red-500' : ''
+                tweet.is_liked ? 'text-red-500' : ''
               }`}
               onClick={handleLike}
               disabled={isLiking}
             >
-              <Heart className={`w-5 h-5 ${tweet.isLiked ? 'fill-current' : ''}`} />
-              <span>{tweet.likesCount}</span>
+              <Heart className={`w-5 h-5 ${tweet.is_liked ? 'fill-current' : ''}`} />
+              <span>{tweet.likes_count}</span>
             </button>
             <button
               className="flex items-center space-x-1 text-gray-500 hover:text-blue-500"

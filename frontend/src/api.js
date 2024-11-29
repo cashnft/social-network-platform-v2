@@ -53,7 +53,7 @@ export const userAPI = {
 };
 
 export const tweetAPI = {
-    createTweet: (content) => api.post('/tweets', { content }),
+    createTweet: (content) => api.post('/tweets/post', { content }),
     deleteTweet: (tweetId) => api.delete(`/tweets/${tweetId}`),
     likeTweet: (tweetId) => api.post(`/tweets/${tweetId}/like`),
     unlikeTweet: (tweetId) => api.delete(`/tweets/${tweetId}/like`),
