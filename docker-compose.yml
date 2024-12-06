@@ -2,18 +2,23 @@ version: '3.8'
 
 services:
   api-gateway:
-    build:
-      context: ./gateway
-      dockerfile: Dockerfile
-    ports:
-      - "8084:80"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - app-network
+      build:
+        context: ./gateway
+        dockerfile: Dockerfile
+      ports:
+        - "8084:80"
+      depends_on:
+        - user-service
+        - tweet-service
+        - notification-service
+        - search-service
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:80/health"]  # Updated path
+        interval: 30s
+        timeout: 10s
+        retries: 3
+      networks:
+        - app-network
 
   redis:
     image: redis:alpine
@@ -32,7 +37,7 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - postgres_users_data:/var/lib/postgresql/data
-      - ./backend/user_profile/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/user_service/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5440:5432" 
     healthcheck:
@@ -97,9 +102,9 @@ services:
     networks:
       - app-network
 
-  user-service:
+  user-service:  # Change the service name here
     build:
-      context: ./backend/user_profile
+      context: ./backend/user_service
       dockerfile: Dockerfile
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres-users:5432/chirper_users
@@ -111,7 +116,7 @@ services:
       postgres-users:
         condition: service_healthy
     volumes:
-      - ./backend/user_profile:/app
+      - ./backend/user_service:/app
     networks:
       - app-network
 
