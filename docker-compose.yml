@@ -1,7 +1,29 @@
 version: '3.8'
 
 services:
- 
+  api-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8084:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+  
   postgres-users:
     image: postgres:15-alpine
     environment:
@@ -171,6 +193,7 @@ volumes:
   postgres_tweets_data:
   postgres_notifications_data:
   postgres_search_data:
+  redis_data:
 
 networks:
   app-network:

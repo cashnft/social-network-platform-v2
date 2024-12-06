@@ -1,13 +1,17 @@
 import axios from 'axios';
 
 
+
+
 const api = axios.create({
-    baseURL: '/api',  
+    baseURL: 'http://localhost:8084/api',  
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+// Rest of the file remains same
 
 
 api.interceptors.request.use(

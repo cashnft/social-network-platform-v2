@@ -7,5 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 COPY .env .
-
+COPY security ./security
 CMD ["python", "app.py"]

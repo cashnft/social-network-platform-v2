@@ -4,7 +4,10 @@ from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from datetime import datetime
 import os
 
+from security.middleware import setup_security, validate_input, validation_rules
+
 app = Flask(__name__)
+limiter = setup_security(app)
 
 #conf
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:password@localhost:5432/chirper_tweets')
